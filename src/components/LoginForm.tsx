@@ -126,7 +126,7 @@ const LoginForm = () => {
                 />
                 <Label htmlFor="remember">Remember me</Label>
             </div>
-            <Button onClick={handleLogin} disabled={!inputsFilled || loggingIn}>
+            <Button className='cursor-pointer' onClick={handleLogin} disabled={!inputsFilled || loggingIn}>
                 {loggingIn ? (
                     <>
                         <AiOutlineLoading className="h-6 w-6 animate-spin mr-3" />
