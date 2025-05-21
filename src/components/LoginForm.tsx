@@ -25,7 +25,7 @@ const LoginForm = () => {
     const changeUser = (event: React.ChangeEvent<HTMLInputElement>) => {
         setUser({
             ...user,
-            [event.target.id]: '',
+            [event.target.id]:  event.target.value,
         });
 
         if (loginError) {
