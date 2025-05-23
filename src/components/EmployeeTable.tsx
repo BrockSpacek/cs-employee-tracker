@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react'
 import { FaCaretDown, FaCaretUp } from 'react-icons/fa';
 import { Button } from './ui/button';
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from './ui/table';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import EmployeeModal from './EmployeeModal';
 import { useAppContext } from '@/lib/context/context';
 
@@ -24,6 +25,10 @@ const EmployeeTable = () => {
 
     const [sortBy, setSortBy] = useState("");
     const [sortByJob, setSortByJob] = useState("");
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // Function to get employees
     const handleGetEmployees = async () => {
@@ -54,12 +59,13 @@ const EmployeeTable = () => {
         if (sortByJob) {
             setSortByJob("");
         }
+        setCurrentPage(1); 
     };
 
     const changeSortByJob = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSortBy("job-title");
-
         setSortByJob(e.target.value);
+        setCurrentPage(1);
     };
 
     // Delete employee
@@ -67,6 +73,10 @@ const EmployeeTable = () => {
         try {
             if (await deleteEmployee(token, id)) {
                 await handleGetEmployees();
+                const totalPages = Math.ceil((sortedEmployees.length - 1) / itemsPerPage);
+                if (currentPage > totalPages && totalPages > 0) {
+                    setCurrentPage(totalPages);
+                }
             }
         } catch (error) {
             console.log("error", error);
@@ -75,7 +85,6 @@ const EmployeeTable = () => {
 
     const handleViewEmployee = async (id: number) => {
         await setEmployeeId(id);
-
         push('/employee-page');
     };
 
@@ -102,7 +111,7 @@ const EmployeeTable = () => {
 
     // Sorting the employees
     useEffect(() => {
-        const sortingEmployees = employees;
+        const sortingEmployees = [...employees]; 
 
         const handleSorting = () => {
             switch (sortBy) {
@@ -123,8 +132,9 @@ const EmployeeTable = () => {
                     );
                     break;
                 case "job-title":
-                    sortingEmployees.filter((employee: Employee) => employee.jobTitle == sortByJob);
-                    break;
+                    const filtered = sortingEmployees.filter((employee: Employee) => employee.jobTitle == sortByJob);
+                    setSortedEmployees(filtered);
+                    return;
                 default:
                     sortingEmployees.sort((a: Employee, b: Employee) => a.id - b.id);
                     break;
@@ -135,6 +145,27 @@ const EmployeeTable = () => {
         handleSorting();
 
     }, [employees, sortBy, sortByJob]);
+
+    // Pagination calculations
+    const totalPages = Math.ceil(sortedEmployees.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentEmployees = sortedEmployees.slice(startIndex, endIndex);
+
+    // Pagination handlers
+    const goToPage = (page: number) => {
+        setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    };
+
+    const goToFirstPage = () => setCurrentPage(1);
+    const goToLastPage = () => setCurrentPage(totalPages);
+    const goToPreviousPage = () => setCurrentPage(prev => Math.max(1, prev - 1));
+    const goToNextPage = () => setCurrentPage(prev => Math.min(totalPages, prev + 1));
+
+    const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setItemsPerPage(Number(e.target.value));
+        setCurrentPage(1);
+    };
 
     return (
         <>
@@ -157,14 +188,14 @@ const EmployeeTable = () => {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem  onClick={() => changeSortBy("name")}>A-Z</DropdownMenuItem>
-                                <DropdownMenuItem  onClick={() => changeSortBy("name-reverse")}>Z-A</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => changeSortBy("name")}>A-Z</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => changeSortBy("name-reverse")}>Z-A</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button  variant="outline" className="text-sm text-gray-600 cursor-pointer">
+                                <Button variant="outline" className="text-sm text-gray-600 cursor-pointer">
                                     Hire date
                                     {sortBy === "hire-date" ? <FaCaretDown className="ml-2" /> : sortBy === "hire-date-reverse" ? <FaCaretUp className="ml-2" /> : ""}
                                 </Button>
@@ -192,6 +223,29 @@ const EmployeeTable = () => {
             </div>
             {/* Sort by - End */}
 
+            {/* Pagination */}
+            <div className="flex justify-between items-center mb-4 px-4">
+                <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-600">
+                        Showing {Math.min(endIndex, sortedEmployees.length)} of {sortedEmployees.length} employees
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600">Show:</label>
+                        <select
+                            value={itemsPerPage}
+                            onChange={handleItemsPerPageChange}
+                            className="text-sm border rounded p-1"
+                        >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                        </select>
+                        <span className="text-sm text-gray-600">per page</span>
+                    </div>
+                </div>
+            </div>
+
             {/* Display table - Start */}
             <Table>
                 <TableHeader>
@@ -203,7 +257,7 @@ const EmployeeTable = () => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {sortedEmployees.length === 0 ? (
+                    {currentEmployees.length === 0 ? (
                         <TableRow>
                             <TableCell></TableCell>
                             <TableCell className="text-center">
@@ -212,8 +266,8 @@ const EmployeeTable = () => {
                             <TableCell></TableCell>
                         </TableRow>
                     ) : (
-                        sortedEmployees.map((employee, idx) => (
-                            <TableRow key={idx}>
+                        currentEmployees.map((employee, idx) => (
+                            <TableRow key={employee.id}>
                                 <TableCell className="font-medium">{employee.name}</TableCell>
                                 <TableCell>{employee.jobTitle}</TableCell>
                                 <TableCell>{employee.hireDate}</TableCell>
@@ -232,6 +286,94 @@ const EmployeeTable = () => {
                 </TableBody>
             </Table>
             {/* Display table - End */}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center mt-6 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-4 sm:mb-0">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={goToFirstPage}
+                            disabled={currentPage === 1}
+                            className="flex items-center gap-1"
+                        >
+                            <ChevronsLeft className="h-4 w-4" />
+                            First
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={goToPreviousPage}
+                            disabled={currentPage === 1}
+                            className="flex items-center gap-1"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                        </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-4 sm:mb-0">
+                        {/* Page numbers */}
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNumber;
+                            if (totalPages <= 5) {
+                                pageNumber = i + 1;
+                            } else if (currentPage <= 3) {
+                                pageNumber = i + 1;
+                            } else if (currentPage >= totalPages - 2) {
+                                pageNumber = totalPages - 4 + i;
+                            } else {
+                                pageNumber = currentPage - 2 + i;
+                            }
+
+                            return (
+                                <Button
+                                    key={pageNumber}
+                                    variant={currentPage === pageNumber ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => goToPage(pageNumber)}
+                                    className="w-10"
+                                >
+                                    {pageNumber}
+                                </Button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={goToNextPage}
+                            disabled={currentPage === totalPages}
+                            className="flex items-center gap-1"
+                        >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={goToLastPage}
+                            disabled={currentPage === totalPages}
+                            className="flex items-center gap-1"
+                        >
+                            Last
+                            <ChevronsRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Page Info */}
+            {totalPages > 1 && (
+                <div className="text-center mt-2">
+                    <span className="text-sm text-gray-600">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                </div>
+            )}
         </>
     )
 }
