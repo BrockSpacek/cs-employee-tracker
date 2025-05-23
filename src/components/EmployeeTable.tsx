@@ -182,7 +182,7 @@ const EmployeeTable = () => {
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="text-sm text-gray-600 cursor-pointer">
+                                <Button variant="outline" className="text-sm text-gray-600 cursor-pointer mr-4">
                                     Name
                                     {sortBy === "name" ? <FaCaretDown className="ml-2" /> : sortBy === "name-reverse" ? <FaCaretUp className="ml-2" /> : ""}
                                 </Button>
@@ -272,11 +272,11 @@ const EmployeeTable = () => {
                                 <TableCell>{employee.jobTitle}</TableCell>
                                 <TableCell>{employee.hireDate}</TableCell>
                                 <TableCell className="flex gap-3 justify-end">
-                                    <Button onClick={() => handleViewEmployee(employee.id)}>
+                                    <Button className='cursor-pointer bg-green-400 hover:bg-green-600' onClick={() => handleViewEmployee(employee.id)}>
                                         View
                                     </Button>
-                                    <EmployeeModal type="Edit" employee={employee} refreshEmployees={handleGetEmployees} />
-                                    <Button variant="destructive" onClick={() => handleDeleteEmployee(employee.id)}>
+                                    <EmployeeModal  type="Edit" employee={employee} refreshEmployees={handleGetEmployees} />
+                                    <Button className='cursor-pointer bg-red-500 hover:bg-red-700' variant="destructive" onClick={() => handleDeleteEmployee(employee.id)}>
                                         Delete
                                     </Button>
                                 </TableCell>
@@ -296,7 +296,7 @@ const EmployeeTable = () => {
                             size="sm"
                             onClick={goToFirstPage}
                             disabled={currentPage === 1}
-                            className="flex items-center gap-1"
+                            className="flex items-center gap-1 cursor-pointer"
                         >
                             <ChevronsLeft className="h-4 w-4" />
                             First
@@ -306,7 +306,7 @@ const EmployeeTable = () => {
                             size="sm"
                             onClick={goToPreviousPage}
                             disabled={currentPage === 1}
-                            className="flex items-center gap-1"
+                            className="flex items-center gap-1 cursor-pointer"
                         >
                             <ChevronLeft className="h-4 w-4" />
                             Previous
@@ -333,7 +333,7 @@ const EmployeeTable = () => {
                                     variant={currentPage === pageNumber ? "default" : "outline"}
                                     size="sm"
                                     onClick={() => goToPage(pageNumber)}
-                                    className="w-10"
+                                    className="w-10 cursor-pointer"
                                 >
                                     {pageNumber}
                                 </Button>
@@ -347,7 +347,7 @@ const EmployeeTable = () => {
                             size="sm"
                             onClick={goToNextPage}
                             disabled={currentPage === totalPages}
-                            className="flex items-center gap-1"
+                            className="flex items-center gap-1 cursor-pointer"
                         >
                             Next
                             <ChevronRight className="h-4 w-4" />
@@ -357,7 +357,7 @@ const EmployeeTable = () => {
                             size="sm"
                             onClick={goToLastPage}
                             disabled={currentPage === totalPages}
-                            className="flex items-center gap-1"
+                            className="flex items-center gap-1 cursor-pointer"
                         >
                             Last
                             <ChevronsRight className="h-4 w-4" />

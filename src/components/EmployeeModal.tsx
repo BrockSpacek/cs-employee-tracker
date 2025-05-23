@@ -9,10 +9,17 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar } from './ui/calendar';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
+// Predefined job titles
+const JOB_TITLES = [
+    'Software Engineer',
+    'Customer Support',
+    'IT Support Specialist'
+];
 
 // Valid values for type: "Add" & "Edit"
 const EmployeeModal = ({ type, employee, refreshEmployees }: { type: 'Add' | 'Edit', employee: Employee | null, refreshEmployees: () => Promise<void> }) => {
@@ -24,14 +31,17 @@ const EmployeeModal = ({ type, employee, refreshEmployees }: { type: 'Add' | 'Ed
         name: "",
         jobTitle: "",
         hireDate: "",
+        details: "",
+        status: "",
+        
     });
 
     const [token, setToken] = useState('');
 
     const disableBtn =
-        employeeToChange.name.trim() != "" ||
-        employeeToChange.jobTitle.trim() != "" &&
-        employeeToChange.hireDate != "";
+        employeeToChange.name.trim() === "" ||
+        employeeToChange.jobTitle.trim() === "" ||
+        employeeToChange.hireDate === "";
 
     // Modal Functions
     const onOpenModal = () => {
@@ -44,7 +54,8 @@ const EmployeeModal = ({ type, employee, refreshEmployees }: { type: 'Add' | 'Ed
 
     const onCloseModal = () => {
         setOpenModal(false);
-        setEmployeeToChange({ id: 0, name: "", jobTitle: "", hireDate: "" });
+        setEmployeeToChange({ id: 0, name: "", jobTitle: "", hireDate: "",  details: "",
+        status: "", });
     };
 
     // Change employee functions
@@ -52,6 +63,13 @@ const EmployeeModal = ({ type, employee, refreshEmployees }: { type: 'Add' | 'Ed
         setEmployeeToChange({
             ...employeeToChange,
             [e.target.id]: e.target.value,
+        });
+    };
+
+    const handleJobTitleChange = (value: string) => {
+        setEmployeeToChange({
+            ...employeeToChange,
+            jobTitle: value,
         });
     };
 
@@ -103,6 +121,8 @@ const EmployeeModal = ({ type, employee, refreshEmployees }: { type: 'Add' | 'Ed
                 name: "",
                 jobTitle: "",
                 hireDate: "",
+                details: "",
+                status: "",
             });
         } catch (error) {
             console.log("error", error);
@@ -161,11 +181,21 @@ const EmployeeModal = ({ type, employee, refreshEmployees }: { type: 'Add' | 'Ed
                             <div className="mb-2 block">
                                 <Label htmlFor="jobTitle">Job title</Label>
                             </div>
-                            <Input
-                                id="jobTitle"
-                                value={employeeToChange.jobTitle}
-                                onChange={handleEmployeeToChange}
-                            />
+                            <Select 
+                                value={employeeToChange.jobTitle} 
+                                onValueChange={handleJobTitleChange}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a job title" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {JOB_TITLES.map((title) => (
+                                        <SelectItem key={title} value={title}>
+                                            {title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <div>
